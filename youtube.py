@@ -9,10 +9,10 @@ class YoutubeDownload(object):
     #Class Constructor
     #@param filePath: The file path with the input data.
     def __init__(self,folder,filePath,tokensplit):
-        self.path = filePath
-        self.token= tokensplit
-        self.names = []
         self.folder = folder
+        self.path = filePath
+        self.token = tokensplit
+        self.names = []
 
     #Just read file and show this list with youtube url
     def run(self):
@@ -25,15 +25,17 @@ class YoutubeDownload(object):
     def run_download_mp3(self):
         self.names = self.loadData(self.path)
         for n in self.names:
-            video = self.search(n)
-            url = video['url']
-            print 'Downloading... %s'%(video['title'])
-            print commands.getstatusoutput('cd %s && youtube-dl %s --extract-audio'%(self.folder,url))
-
+            try:
+                video = self.search(n)
+                url = video['url']
+                print 'Downloading... %s'%(video['title'])
+                print commands.getstatusoutput('cd %s && youtube-dl %s --extract-audio'%(self.folder,url))
+            except:
+                print 'Download fail'
     #Invoke convert.sh file for convert .m4a to mp3
     #@param filePath: The file path
     def convertM4aToMp3(self):
-        print commands.getstatusoutput('cd %s && ../convert.sh'%(self.folder))
+        print commands.getstatusoutput('cd %s && ~/PyProjects/youtube_to_mp3/convert.sh'%(self.folder))
 
     #Load the dataset
     #@param filePath: The file path
@@ -43,12 +45,16 @@ class YoutubeDownload(object):
         #Ignore the first line (header)
         fileList = fileHandle.readlines()
         for line in fileList:
-            # line = line.strip()
-            lineSet = line.split(self.token)
-            if lineSet[0].isalpha():
-                # print lineSet
-                names.append("%s - %s"%(lineSet[0], lineSet[1].strip('\n')))
-                # self.names.append("%s - %s"%(lineSet[0], lineSet[1].strip('\n')))
+            try:
+                if not line.startswith("#"):
+                    # line = line.strip()
+                    lineSet = line.split(self.token)
+                    # if lineSet[0].isalpha():
+                    # print lineSet
+                    names.append("%s - %s"%(lineSet[0], lineSet[1].strip('\n')))
+                    # self.names.append("%s - %s"%(lineSet[0], lineSet[1].strip('\n')))
+            except:
+                print 'read line fail'
         fileHandle.close()
         return names
         # print self.names
@@ -69,6 +75,8 @@ class YoutubeDownload(object):
             break
         return _id
 
-youtube = YoutubeDownload('~/PyProjects/youtube_to_mp3/musics','dataset/dataset_1.txt','\t')
+# youtube = YoutubeDownload('~/PyProjects/youtube_to_mp3/musics','dataset/dataset_1.txt','\t')
+youtube = YoutubeDownload('~/musics','dataset/dataset.txt',';')
+# youtube.run()
 youtube.run_download_mp3()
 youtube.convertM4aToMp3()
